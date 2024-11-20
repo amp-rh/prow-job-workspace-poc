@@ -30,7 +30,8 @@ RUN <<EOF
     done
 EOF
 
-FROM link_latest AS run
-WORKDIR $UNPACKED_PROW_DIR/jobs
+FROM registry.access.redhat.com/ubi9/ubi-micro AS run
+COPY --from=link_latest /tmp/prow/jobs /tmp/prow/jobs
+WORKDIR /tmp/prow/jobs
 CMD [ "/bin/bash" ]
 

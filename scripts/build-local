@@ -2,4 +2,4 @@
 
 IMG_TAG=prow-jobs
 
-podman build --no-cache . -t $IMG_TAG
+podman build --rm -t $IMG_TAG --force-rm --squash .
