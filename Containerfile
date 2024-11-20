@@ -32,5 +32,5 @@ EOF
 
 FROM link_latest AS run
 WORKDIR $UNPACKED_PROW_DIR/jobs
-ENTRYPOINT [ "/bin/bash" ]
+CMD [ "/bin/bash" ]
 
