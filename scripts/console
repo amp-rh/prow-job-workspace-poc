@@ -1,0 +1,5 @@
+#!/bin/bash
+
+IMG_TAG=prow_jobs
+
+podman run -it $IMG_TAG
