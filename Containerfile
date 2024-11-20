@@ -19,7 +19,7 @@ COPY --from=fetch_prow_jobs $PROW_JOBS_OUT_PATH /tmp/prow_jobs.json
 ENV APP_FILE="unpack_prow_jobs.py"
 ENV PROW_JOBS_JSON_PATH="/tmp/prow_jobs.json"
 ENV UNPACKED_PROW_DIR="/tmp/prow"
-ENV JOB_NAME_FILTER_REGEX=".+-ocp4\.18-lp-interop-"
+ENV JOB_NAME_FILTER_REGEX="^periodic-.+-ocp4\.18-lp-interop-"
 RUN /usr/libexec/s2i/run
 
 FROM unpack_prow_jobs AS link_latest

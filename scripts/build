@@ -1,6 +1,6 @@
 #!/bin/bash
 
 REMOTE_URL=https://github.com/amp-rh/prow-job-workspace-poc.git 
-IMG_TAG=prow-jobs-workspace
+IMG_TAG=prow-jobs
 
-podman build $REMOTE_URL -t $IMG_TAG
+podman build --no-cache $REMOTE_URL -t $IMG_TAG

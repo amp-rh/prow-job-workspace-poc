@@ -1,0 +1,5 @@
+#!/bin/bash
+
+IMG_TAG=prow-jobs
+
+podman build --no-cache . -t $IMG_TAG
