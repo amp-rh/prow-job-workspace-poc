@@ -13,7 +13,6 @@ if __name__ == "__main__":
     for d in (
         (jobs_by_build_id_path := jobs_root.joinpath("by-build-id")),
         (jobs_by_name_path := jobs_root.joinpath("by-job-name")),
-        (jobs_by_type_path := jobs_root.joinpath("by-job-type")),
         (jobs_by_state_path := jobs_root.joinpath("by-job-state")),
         (jobs_by_refs_path := jobs_root.joinpath("by-refs")),
     ):
@@ -36,36 +35,39 @@ if __name__ == "__main__":
                 print("skipping job without build_id")
                 continue
 
-            job_dir = jobs_by_build_id_path.joinpath(job_build_id)
-            job_refs_dir = job_dir.joinpath("refs")
+            (job_dir := jobs_by_name_path.joinpath(job_name)).mkdir(
+                parents=True, exist_ok=True
+            )
+            (_job_build_dir := jobs_by_build_id_path.joinpath(job_build_id)).mkdir(
+                parents=True
+            )
+            (job_build_dir := job_dir.joinpath(job_build_id)).symlink_to(
+                _job_build_dir, target_is_directory=True
+            )
+            (job_refs_dir := job_build_dir.joinpath("refs")).mkdir()
 
-            job_dir.mkdir()
-            job_refs_dir.mkdir()
-
-            job_dir.joinpath("raw").write_text(json.dumps(j))
+            job_build_dir.joinpath("raw").write_text(json.dumps(j))
+            job_build_dir.joinpath("job").write_text(job_name)
 
             if job_url := job_status.get("url"):
-                job_dir.joinpath("url").write_text(job_url)
+                job_build_dir.joinpath("url").write_text(job_url)
 
             if job_start_time := job_status.get("startTime"):
-                job_dir.joinpath("start_time").write_text(job_start_time)
+                job_build_dir.joinpath("start_time").write_text(job_start_time)
 
             if job_pending_time := job_status.get("pendingTime"):
-                job_dir.joinpath("pending_time").write_text(job_pending_time)
+                job_build_dir.joinpath("pending_time").write_text(job_pending_time)
 
             if completion_time := job_status.get("completionTime"):
-                job_dir.joinpath("completion_time").write_text(completion_time)
+                job_build_dir.joinpath("completion_time").write_text(completion_time)
 
             if job_state := job_status.get("state"):
-                job_dir.joinpath("state").write_text(job_state)
-                _p = jobs_by_state_path.joinpath(job_state).joinpath(job_build_id)
-                _p.parent.mkdir(exist_ok=True)
-                _p.symlink_to(job_dir, target_is_directory=True)
-
-            if job_name := job_spec.get("job"):
-                job_dir.joinpath("job").write_text(job_name)
-                _p = jobs_by_name_path.joinpath(job_name).joinpath(job_build_id)
-                _p.parent.mkdir(exist_ok=True)
+                job_build_dir.joinpath("state").write_text(job_state)
+                (
+                    _p := jobs_by_state_path.joinpath(job_state)
+                    .joinpath(job_name)
+                    .joinpath(job_build_id)
+                ).parent.mkdir(exist_ok=True, parents=True)
                 _p.symlink_to(job_dir, target_is_directory=True)
 
             _refs = job_spec.get("refs")
@@ -80,17 +82,13 @@ if __name__ == "__main__":
                     ref_repo = ref["repo"]
                     base_ref = ref["base_ref"]
 
-                    _p = (
-                        jobs_by_refs_path.joinpath(ref_org)
-                        .joinpath(ref_repo)
-                        .joinpath(base_ref)
-                        .joinpath(job_name)
-                    )
-                    _p.parent.mkdir(exist_ok=True, parents=True)
-                    _p.symlink_to(jobs_by_name_path.joinpath(job_name), target_is_directory=True)
-
-            if job_type := job_spec.get("type"):
-                job_dir.joinpath("type").write_text(job_type)
-                _p = jobs_by_type_path.joinpath(job_type).joinpath(job_build_id)
-                _p.parent.mkdir(exist_ok=True)
-                _p.symlink_to(job_dir, target_is_directory=True)
+                    (
+                        _p := (
+                            jobs_by_refs_path.joinpath(ref_org)
+                            .joinpath(ref_repo)
+                            .joinpath(base_ref)
+                            .joinpath(job_name)
+                        )
+                    ).parent.mkdir(exist_ok=True, parents=True)
+                    if not _p.exists():
+                        _p.symlink_to(job_dir, target_is_directory=True)
