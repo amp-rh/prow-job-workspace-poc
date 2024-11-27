@@ -49,6 +49,24 @@ if __name__ == "__main__":
             job_build_dir.joinpath("raw").write_text(json.dumps(j))
             job_build_dir.joinpath("job").write_text(job_name)
 
+            job_env_map = {
+                "JOB_NAME": job_name
+            }
+
+            build_env_map = {
+                "BUILD_ID": job_build_id
+            }
+
+            build_env_map.update(job_env_map)
+            
+            job_dotenv = job_dir.joinpath(".env")
+            build_dotenv = job_build_dir.joinpath(".env")
+
+            if not job_dotenv.exists():
+                job_dotenv.write_text("\n".join(f"{k}={v}" for k, v in job_env_map.items()))
+
+            build_dotenv.write_text("\n".join(f"{k}={v}" for k, v in build_env_map.items()))
+
             if job_url := job_status.get("url"):
                 job_build_dir.joinpath("url").write_text(job_url)
 

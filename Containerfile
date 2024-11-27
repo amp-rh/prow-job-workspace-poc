@@ -22,16 +22,30 @@ ENV UNPACKED_PROW_DIR="/tmp/prow"
 ENV JOB_NAME_FILTER_REGEX="^periodic-.+-ocp4\.18-lp-interop-"
 RUN /usr/libexec/s2i/run
 
-FROM unpack_prow_jobs AS link_latest
-WORKDIR $UNPACKED_PROW_DIR/jobs/by-job-name
+FROM unpack_prow_jobs AS add_scripts
+COPY --from=unpack_prow_jobs /tmp/prow/jobs /tmp/prow/jobs
+ADD app-src/job_scripts /tmp/prow/job_scripts
+ADD app-src/build_scripts /tmp/prow/build_scripts
+ENV JOB_SCRIPTS_DIR="/tmp/prow/job_scripts"
+ENV BUILD_SCRIPTS_DIR="/tmp/prow/build_scripts"
+ENV APP_FILE="add_scripts.py"
 RUN <<EOF 
-    for d in ./*; do    
+    for d in /tmp/prow/jobs/by-job-name/*; do    
         link $d/$(ls $d -Xr | head -n 1) $d/latest
     done
 EOF
+RUN /usr/libexec/s2i/run
 
-FROM registry.access.redhat.com/ubi9/ubi-micro AS run
-COPY --from=link_latest /tmp/prow/jobs /tmp/prow/jobs
-WORKDIR /tmp/prow/jobs
+
+
+FROM registry.access.redhat.com/ubi9/ubi-minimal AS run
+COPY --from=add_scripts /tmp/prow /tmp/prow
+ADD app-src/requirements.txt /tmp/src/requirements.txt
+WORKDIR /tmp/prow/jobs/by-job-name
+RUN <<EOF
+    microdnf install python312 python3.12-pip -y
+    microdnf clean all
+    python3.12 -m pip install -r /tmp/src/requirements.txt
+EOF
 CMD [ "/bin/bash" ]
 
