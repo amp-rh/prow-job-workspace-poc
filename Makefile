@@ -29,5 +29,6 @@ build-reports-img:
 reports: build-reports-img
 	podman container create --replace --rm --name=$(REPORTS_CONTAINER_NAME) $(REPORTS_IMG_TAG)
 	podman cp --overwrite $(REPORTS_CONTAINER_NAME):$(CONTAINER_REPORTS_DIR) ./
+	
 console:
 	podman run -it -e GANGWAY_TOKEN -e GANGWAY_URL $(CONSOLE_IMG_TAG)

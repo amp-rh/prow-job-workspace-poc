@@ -8,8 +8,8 @@ import json
 
 assert dotenv.load_dotenv()
 
-GANGWAY_URL = os.environ["GANGWAY_URL"]
-GANGWAY_TOKEN = os.environ["GANGWAY_TOKEN"]
+GANGWAY_URL = os.getenv("GANGWAY_URL", "NOT_SET")
+GANGWAY_TOKEN = os.getenv("GANGWAY_TOKEN", "NOT_SET")
 
 JOB_NAME = os.environ["JOB_NAME"]
 
