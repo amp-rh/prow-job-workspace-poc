@@ -1,8 +1,11 @@
 FROM registry.access.redhat.com/ubi9/python-312 AS base
 
-ENV PROW_JOBS_OUT_PATH="/tmp/prow_jobs.json"
 ENV PROW_BASE_URL="https://prow.ci.openshift.org"
 ENV PROW_JOBS_JSON_ENDPOINT="/prowjobs.js?omit=annotations%2Clabels%2Cdecoration_config%2Cpod_spec"
+ENV PROW_JOBS_JSON_PATH="/tmp/prow_jobs.json"
+ENV UNPACKED_PROW_DIR="/tmp/prow"
+ENV JOB_NAME_FILTER_REGEX="^periodic-.+-ocp4\.18-lp-interop-"
+ENV CONTAINER_REPORTS_DIR="/tmp/reports"
 
 USER 0
 ADD app-src /tmp/src
@@ -14,12 +17,14 @@ FROM base as fetch_prow_jobs
 ENV APP_FILE="fetch_prow_jobs.py"
 RUN /usr/libexec/s2i/run
 
+FROM fetch_prow_jobs AS reports
+ENV APP_FILE="reports.py"
+RUN /usr/libexec/s2i/run
+
 FROM base AS unpack_prow_jobs
 COPY --from=fetch_prow_jobs $PROW_JOBS_OUT_PATH /tmp/prow_jobs.json
 ENV APP_FILE="unpack_prow_jobs.py"
 ENV PROW_JOBS_JSON_PATH="/tmp/prow_jobs.json"
-ENV UNPACKED_PROW_DIR="/tmp/prow"
-ENV JOB_NAME_FILTER_REGEX="^periodic-.+-ocp4\.18-lp-interop-"
 RUN /usr/libexec/s2i/run
 
 FROM unpack_prow_jobs AS add_scripts
@@ -35,8 +40,6 @@ RUN <<EOF
     done
 EOF
 RUN /usr/libexec/s2i/run
-
-
 
 FROM registry.access.redhat.com/ubi9/ubi-minimal AS run
 COPY --from=add_scripts /tmp/prow /tmp/prow
