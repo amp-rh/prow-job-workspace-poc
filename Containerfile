@@ -46,6 +46,7 @@ RUN <<EOF
     microdnf install python312 python3.12-pip -y
     microdnf clean all
     python3.12 -m pip install -r /tmp/src/requirements.txt
+    echo "alias ls='ls --color'" >> ~/.bashrc
 EOF
 CMD [ "/bin/bash" ]
 
