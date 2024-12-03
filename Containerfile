@@ -22,7 +22,7 @@ ENV APP_FILE="reports.py"
 RUN /usr/libexec/s2i/run
 
 FROM base AS unpack_prow_jobs
-COPY --from=fetch_prow_jobs $PROW_JOBS_OUT_PATH /tmp/prow_jobs.json
+COPY --from=fetch_prow_jobs $PROW_JOBS_JSON_PATH /tmp/prow_jobs.json
 ENV APP_FILE="unpack_prow_jobs.py"
 ENV PROW_JOBS_JSON_PATH="/tmp/prow_jobs.json"
 RUN /usr/libexec/s2i/run
